@@ -1,0 +1,421 @@
+<title>SorriaGestão Protótipo</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap">
+<style>
+/* Layout: mapa de telas à esquerda + moldura de celular (390x844) com o app; no celular real o app ocupa a tela toda. */
+/* Tema único (claro) por escolha: é o visual do produto. */
+:root{
+  --ground:#E7ECEA; --ink:#14211F; --muted:#5D6B68; --line:#D5DDDA;
+  --surface:#FFFFFF; --soft:#F3F6F5;
+  --brand:#0B6E69; --brand-2:#0E8A83; --brand-soft:#DDF0EE;
+  --ok:#1E8E4E; --ok-soft:#E2F4E9; --warn:#B26A00; --warn-soft:#FDF0DA; --bad:#C2402F; --bad-soft:#FBE5E1;
+  --wa:#E9F7EF; --wa-out:#D8F5C8; --wa-bg:#EFE9E1;
+  --display:"Fraunces", Georgia, serif; --body:"Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--body);font-size:14px;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+
+.stage{min-height:100%;display:flex;gap:48px;justify-content:center;align-items:center;padding-block:32px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.guide{width:280px;flex:none}
+.guide h1{font-family:var(--display);font-size:30px;line-height:1.1;margin:0 0 6px;color:var(--brand)}
+.guide p{color:var(--muted);margin:0 0 18px;line-height:1.5}
+.guide ol{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.guide a{display:flex;gap:10px;align-items:baseline;padding:7px 10px;border-radius:8px;text-decoration:none;color:var(--ink)}
+.guide a span{font-variant-numeric:tabular-nums;color:var(--muted);font-size:12px;width:18px}
+.guide a:hover{background:var(--surface)}
+.guide a.on{background:var(--surface);font-weight:700;color:var(--brand)}
+.guide small{display:block;margin-top:18px;color:var(--muted);font-size:12px;line-height:1.5}
+
+.phone{width:390px;height:844px;max-height:calc(100vh - 64px);min-height:640px;background:var(--surface);border-radius:44px;box-shadow:0 0 0 10px #1B2826,0 30px 60px -20px rgba(20,33,31,.45);overflow:hidden;position:relative;display:flex;flex-direction:column;flex:none}
+.status{height:44px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 26px;font-weight:700;font-size:14px}
+.status i{font-style:normal;font-size:12px;letter-spacing:1px}
+.screen{flex:1;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;scrollbar-width:none}
+.screen::-webkit-scrollbar{display:none}
+@media (max-width:760px){
+  .stage{padding:0;display:block;height:100%;min-height:0}
+  .guide{display:none}
+  .phone{width:100%;height:100%;max-height:none;min-height:0;border-radius:0;box-shadow:none}
+  .status{display:none}
+}
+
+/* ---------- componentes do app ---------- */
+.top{padding:6px 20px 14px;display:flex;align-items:center;gap:12px}
+.top h2{margin:0;font-size:22px;font-weight:800;letter-spacing:-.01em}
+.top .sub{color:var(--muted);font-size:13px;margin-top:2px}
+.back{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;flex:none}
+.body{padding:0 20px 24px;display:flex;flex-direction:column;gap:14px;flex:1}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.soft{background:var(--soft);border-color:transparent}
+.row{display:flex;align-items:center;gap:12px}
+.grow{flex:1;min-width:0}
+.label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.big{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kpi{padding:12px 14px;border-radius:14px;background:var(--soft)}
+.kpi .big{font-size:24px}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.p-ok{background:var(--ok-soft);color:var(--ok)} .p-warn{background:var(--warn-soft);color:var(--warn)} .p-bad{background:var(--bad-soft);color:var(--bad)} .p-brand{background:var(--brand-soft);color:var(--brand)} .p-gray{background:var(--soft);color:var(--muted)}
+.btn{display:flex;justify-content:center;align-items:center;gap:8px;width:100%;padding:14px;border-radius:14px;border:0;background:var(--brand);color:#fff;font-weight:700;font-size:15px;text-decoration:none}
+.btn:hover{background:var(--brand-2)}
+.btn.ghost{background:var(--surface);color:var(--brand);border:1.5px solid var(--brand)}
+.btn.sm{padding:9px 12px;font-size:13px;border-radius:10px;width:auto}
+.list{display:flex;flex-direction:column}
+.item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);text-decoration:none}
+.item:last-child{border-bottom:0}
+.av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:14px;flex:none;background:var(--brand-soft);color:var(--brand)}
+.time{width:46px;font-weight:800;font-variant-numeric:tabular-nums;flex:none}
+.alert{background:var(--warn-soft);border:1px solid #F1D7A8;border-radius:16px;padding:14px 16px;text-decoration:none;display:block}
+.chev{color:var(--muted);flex:none}
+.tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.tab{padding:7px 13px;border-radius:999px;background:var(--soft);font-weight:700;font-size:13px;border:0;white-space:nowrap}
+.tab.on{background:var(--ink);color:#fff}
+.bar{height:8px;border-radius:99px;background:var(--soft);overflow:hidden}
+.bar b{display:block;height:100%;background:var(--brand);border-radius:99px}
+.nav{flex:none;display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);background:var(--surface);padding:8px 6px calc(10px + env(safe-area-inset-bottom,0px))}
+.nav a{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:600;color:var(--muted);text-decoration:none;padding:4px 0;position:relative}
+.nav a.on{color:var(--brand)}
+.nav .dot{position:absolute;top:0;right:calc(50% - 16px);background:var(--bad);color:#fff;font-size:10px;border-radius:99px;padding:0 5px;font-weight:800}
+.toggle{width:44px;height:26px;border-radius:99px;background:var(--line);border:0;position:relative;flex:none;transition:background .2s}
+.toggle::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.toggle[aria-pressed="true"]{background:var(--brand)}
+.toggle[aria-pressed="true"]::after{left:21px}
+.check{width:22px;height:22px;border-radius:7px;border:2px solid var(--line);display:grid;place-items:center;flex:none;background:var(--surface)}
+.sel .check{background:var(--brand);border-color:var(--brand);color:#fff}
+.sel{background:var(--brand-soft);border-radius:12px}
+.hint{font-size:12px;color:var(--muted);line-height:1.45}
+.toast{position:absolute;left:16px;right:16px;bottom:86px;background:var(--ink);color:#fff;padding:12px 14px;border-radius:12px;font-weight:600;font-size:13px;display:flex;gap:10px;align-items:center;box-shadow:0 10px 24px -8px rgba(0,0,0,.4);animation:up .25s ease-out}
+@keyframes up{from{transform:translateY(10px);opacity:.4}}
+@media (prefers-reduced-motion:reduce){.toast{animation:none}.toggle,.toggle::after{transition:none}}
+
+/* login */
+.hero{background:var(--brand);color:#fff;padding:36px 24px 30px;display:flex;flex-direction:column;gap:12px}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--display);font-size:26px;font-weight:700}
+.logo-mark{width:40px;height:40px;border-radius:12px;background:#fff;display:grid;place-items:center;color:var(--brand)}
+.hero h3{font-family:var(--display);font-size:30px;line-height:1.12;margin:18px 0 0;font-weight:600}
+.hero p{margin:0;opacity:.85;line-height:1.5}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-weight:700;font-size:13px}
+.field input,.field select,.field textarea{font:inherit;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink)}
+.field textarea{resize:none;line-height:1.45}
+
+/* steps */
+.steps{display:flex;flex-direction:column;gap:10px}
+.step{display:flex;gap:12px;align-items:flex-start;padding:14px;border-radius:14px;border:1px solid var(--line)}
+.step .n{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:13px;background:var(--soft);flex:none}
+.step.done .n{background:var(--ok);color:#fff}
+.step.cur{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.step.cur .n{background:var(--brand);color:#fff}
+.qr{width:150px;height:150px;margin:10px auto 4px;border-radius:12px;background:
+ conic-gradient(from 90deg at 2px 2px,#0000 90deg,var(--ink) 0) 0 0/18px 18px;border:10px solid var(--surface);outline:1px solid var(--line);position:relative}
+.qr::before,.qr::after{content:"";position:absolute;width:38px;height:38px;border:7px solid var(--ink);background:var(--surface);border-radius:6px}
+.qr::before{top:4px;left:4px}.qr::after{bottom:4px;right:4px}
+
+/* chat */
+.chat{background:var(--wa-bg);flex:1;padding:14px 14px 10px;display:flex;flex-direction:column;gap:8px}
+.msg{max-width:82%;padding:8px 11px 6px;border-radius:12px;line-height:1.42;font-size:13.5px;box-shadow:0 1px 1px rgba(0,0,0,.06);background:#fff}
+.msg.out{align-self:flex-end;background:var(--wa-out)}
+.msg small{display:block;text-align:right;color:var(--muted);font-size:10.5px;margin-top:2px}
+.msg .who{font-size:11px;font-weight:800;color:var(--brand);display:block;margin-bottom:2px}
+.sys{align-self:center;background:#FFF6D6;font-size:11.5px;padding:5px 10px;border-radius:8px;color:#6B5300;text-align:center}
+.slots{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.slots span{border:1px solid var(--brand);color:var(--brand);border-radius:8px;padding:3px 8px;font-weight:700;font-size:12px;background:#fff}
+.composer{flex:none;display:flex;gap:8px;padding:10px 12px;background:var(--surface);border-top:1px solid var(--line)}
+.composer input{flex:1;border:1px solid var(--line);border-radius:99px;padding:10px 14px;font:inherit;min-width:0}
+
+/* plans */
+.plan{border:1.5px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.plan.best{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.plan ul{margin:0;padding-left:18px;color:var(--muted);line-height:1.6;font-size:13px}
+.price{font-size:24px;font-weight:800}
+.price small{font-size:13px;color:var(--muted);font-weight:600}
+
+/* funnel */
+.funnel{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.funnel div{background:var(--soft);border-radius:12px;padding:10px}
+.funnel .big{font-size:20px}
+.tl{display:flex;flex-direction:column;gap:0;margin-left:6px}
+.tl div{border-left:2px solid var(--line);padding:0 0 16px 16px;position:relative}
+.tl div::before{content:"";position:absolute;left:-7px;top:2px;width:12px;height:12px;border-radius:50%;background:var(--line)}
+.tl div.done::before{background:var(--ok)}
+.tl div.next::before{background:var(--surface);border:2px solid var(--brand);width:8px;height:8px}
+.tl div:last-child{padding-bottom:0}
+</style>
+
+<div class="stage">
+  <nav class="guide" aria-label="Mapa de telas">
+    <h1>SorriaGestão</h1>
+    <p>Protótipo navegável de média fidelidade. Clique nos botões dentro do celular ou use o mapa de telas abaixo.</p>
+    <ol id="map"></ol>
+    <small>Startup One · FIAP 2TDS · Fase 4 · Grupo 87<br>Dados fictícios, só para demonstração.</small>
+  </nav>
+  <div class="phone">
+    <div class="status"><span>9:41</span><i>●●● 5G ▮</i></div>
+    <main class="screen" id="screen" aria-live="polite"></main>
+  </div>
+</div>
+
+<script>
+const I = {
+  back:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+  chev:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>',
+  home:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
+  cal:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+  chat:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.6A8 8 0 1 1 21 12z"/></svg>',
+  doc:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h5"/></svg>',
+  more:'<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>',
+  tooth:'<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M7.5 3C4.9 3 3 5 3 7.8c0 2.3.9 3.7 1.6 5.3.8 1.9 1 4.4 1.6 6.3.4 1.2 1 1.6 1.6 1.6 1 0 1.4-1 1.7-2.7.3-1.8.8-3.6 2.5-3.6s2.2 1.8 2.5 3.6c.3 1.7.7 2.7 1.7 2.7.6 0 1.2-.4 1.6-1.6.6-1.9.8-4.4 1.6-6.3.7-1.6 1.6-3 1.6-5.3C21 5 19.1 3 16.5 3c-1.9 0-2.8 1-4.5 1S9.4 3 7.5 3z"/></svg>',
+  check:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>',
+  bot:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 4v4M9 14h.01M15 14h.01"/></svg>',
+  send:'<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20l18-8L3 4l2 7 9 1-9 1z"/></svg>',
+};
+
+const st = { onb:1, enc:new Set(['m']), encSent:false, human:false, react:false, toggles:{ia:true,conf:true,orc:true,noite:true,human:true}, orcSent:false };
+
+function hdr(title, sub, back){
+  return `<header class="top">${back?`<a class="back" href="#${back}" aria-label="Voltar">${I.back}</a>`:''}<div class="grow"><h2>${title}</h2>${sub?`<div class="sub">${sub}</div>`:''}</div></header>`;
+}
+function nav(on){
+  const it=[['painel','Início',I.home],['agenda','Agenda',I.cal],['conversas','Conversas',I.chat,'2'],['orcamentos','Orçamentos',I.doc],['mais','Mais',I.more]];
+  return `<nav class="nav">${it.map(([h,l,ic,d])=>`<a href="#${h}" class="${h===on?'on':''}">${ic}${l}${d?`<span class="dot">${d}</span>`:''}</a>`).join('')}</nav>`;
+}
+const S = {};
+
+S.login = {name:'Login', html:()=>`
+  <section class="hero">
+    <div class="logo"><span class="logo-mark">${I.tooth}</span>SorriaGestão</div>
+    <h3>Menos cadeira vazia. Mais tratamento fechado.</h3>
+    <p>A IA atende seus pacientes no WhatsApp, confirma consultas e lembra quem esqueceu o orçamento.</p>
+  </section>
+  <div class="body" style="padding-top:22px">
+    <div class="field"><label for="em">E-mail</label><input id="em" type="email" value="dra.camila@sorrisovivo.com.br"></div>
+    <div class="field"><label for="pw">Senha</label><input id="pw" type="password" value="12345678"></div>
+    <a class="btn" href="#painel">Entrar</a>
+    <a class="btn ghost" href="#onboarding">Criar conta grátis</a>
+    <p class="hint" style="text-align:center">Plano grátis para 1 dentista. Sem cartão de crédito.</p>
+  </div>`};
+
+S.onboarding = {name:'Configuração inicial', html:()=>{
+  const s=st.onb;
+  const cls=n=>n<s?'done':n===s?'cur':'';
+  return `${hdr('Vamos configurar','Leva menos de 30 minutos','login')}
+  <div class="body">
+    <div class="steps">
+      <div class="step ${cls(1)}"><span class="n">${s>1?I.check:'1'}</span><div class="grow"><b>Dados da clínica</b><div class="hint">Clínica Sorriso Vivo · 3 cadeiras · Campinas/SP</div></div></div>
+      <div class="step ${cls(2)}"><span class="n">${s>2?I.check:'2'}</span><div class="grow"><b>Conectar o WhatsApp da clínica</b>
+        ${s===2?`<div class="qr" role="img" aria-label="QR code de exemplo"></div><div class="hint" style="text-align:center">Abra o WhatsApp Business › Aparelhos conectados › Conectar aparelho</div>`:`<div class="hint">${s>2?'(19) 99812-4470 conectado':'Use o número que os pacientes já conhecem'}</div>`}</div></div>
+      <div class="step ${cls(3)}"><span class="n">3</span><div class="grow"><b>Ensinar o agente de IA</b><div class="hint">Horários, procedimentos e quando chamar a recepção</div></div></div>
+    </div>
+    <div style="margin-top:auto">${s<3?`<button class="btn" data-act="onb">${s===1?'Continuar':'Já escaneei o QR code'}</button>`:`<a class="btn" href="#agente">Configurar o agente</a>`}</div>
+  </div>`}};
+
+S.painel = {name:'Painel do dia', html:()=>`
+  <header class="top"><div class="av">CR</div><div class="grow"><div class="sub" style="margin:0">Terça, 24 de novembro</div><h2>Bom dia, Dra. Camila</h2></div></header>
+  <div class="body">
+    <a class="alert" href="#encaixe">
+      <div class="row"><span class="pill p-warn">Horário livre</span><span class="grow"></span><span class="chev">${I.chev}</span></div>
+      <div style="margin-top:8px;font-weight:700;line-height:1.4">Ana Souza cancelou às 15h00. A lista de espera tem 3 pacientes para esse horário.</div>
+      <div class="small muted" style="margin-top:4px">Toque para oferecer o encaixe</div>
+    </a>
+    <div class="kpis">
+      <div class="kpi"><div class="label">Consultas hoje</div><div class="big">14</div><div class="small muted">3 cadeiras</div></div>
+      <div class="kpi"><div class="label">Confirmadas pela IA</div><div class="big" style="color:var(--ok)">11</div><div class="small muted">2 aguardando</div></div>
+      <div class="kpi"><div class="label">Faltas no mês</div><div class="big">4,1%</div><div class="small" style="color:var(--ok);font-weight:700">▼ era 18% antes</div></div>
+      <div class="kpi"><div class="label">Resposta média</div><div class="big">38 s</div><div class="small muted">no WhatsApp, 24 h</div></div>
+    </div>
+    <a class="card" href="#orcamentos" style="text-decoration:none">
+      <div class="row"><div class="grow"><div class="label">Orçamentos em aberto</div><div class="big">R$ 18.400</div></div><span class="chev">${I.chev}</span></div>
+      <div class="small muted" style="margin-top:2px">9 pacientes · a IA faz o próximo contato amanhã</div>
+    </a>
+    <div class="card">
+      <div class="row"><div class="grow"><div class="label">Faturamento previsto · novembro</div><div class="big">R$ 62.300</div></div><span class="pill p-ok">78% da meta</span></div>
+      <div class="bar" style="margin-top:10px"><b style="width:78%"></b></div>
+    </div>
+  </div>${nav('painel')}`};
+
+const ag = [
+  ['08:00','Lucas Pereira','Limpeza · Cadeira 1','ok','Confirmada'],
+  ['09:00','Beatriz Lima','Manutenção ortodôntica · C2','ok','Confirmada'],
+  ['10:30','Rafael Costa','Avaliação de implante · C1','ok','Confirmada'],
+  ['11:00','Helena Martins','Restauração · C3','warn','Aguardando'],
+  ['14:00','João Almeida','Canal (2ª sessão) · C1','ok','Confirmada'],
+  ['15:00','Horário livre','Ana Souza cancelou · C2','bad','Encaixar'],
+  ['16:00','Carla Nunes','Clareamento · C3','warn','Aguardando'],
+  ['17:30','Pedro Ramos','Extração · C1','ok','Confirmada'],
+];
+S.agenda = {name:'Agenda', html:()=>`
+  ${hdr('Agenda','Terça, 24 de novembro')}
+  <div class="body">
+    <div class="tabs"><button class="tab on">Hoje</button><button class="tab">Amanhã</button><button class="tab">Semana</button><button class="tab">Lista de espera · 3</button></div>
+    <div class="card" style="padding:4px 16px"><div class="list">
+      ${ag.map(([t,n,d,k,s])=>`<${k==='bad'?'a href="#encaixe"':'div'} class="item"><span class="time">${t}</span><div class="grow"><b style="${k==='bad'?'color:var(--bad)':''}">${n}</b><div class="small muted">${d}</div></div><span class="pill p-${k}">${k==='ok'?I.check:''}${s}</span></${k==='bad'?'a':'div'}>`).join('')}
+    </div></div>
+    <p class="hint">A IA pede a confirmação 48 h e 3 h antes de cada consulta. Quem não responde aparece como "Aguardando".</p>
+  </div>${nav('agenda')}`};
+
+const wait=[['m','Mariana Freitas','Quer antecipar a limpeza','Livre às tardes'],['t','Tiago Barros','Avaliação de aparelho','Prefere após 14h'],['l','Luiza Campos','Restauração','Qualquer horário']];
+S.encaixe = {name:'Encaixe da lista de espera', html:()=>`
+  ${hdr('Preencher horário','Hoje, 15h00 · Cadeira 2','painel')}
+  <div class="body">
+    ${st.encSent?`
+      <div class="card" style="background:var(--ok-soft);border-color:transparent">
+        <div class="row"><span class="pill p-ok">${I.check} Horário preenchido</span></div>
+        <div style="margin-top:10px;font-weight:700;line-height:1.4">Mariana Freitas aceitou o encaixe às 15h00 pelo WhatsApp.</div>
+        <div class="small muted" style="margin-top:4px">A agenda foi atualizada e os outros pacientes foram avisados que a vaga foi preenchida.</div>
+      </div>
+      <div class="card soft"><div class="label">Receita recuperada</div><div class="big">R$ 220</div><div class="small muted">Valor médio de uma limpeza na clínica</div></div>
+      <a class="btn" href="#agenda" style="margin-top:auto">Ver agenda</a>`:`
+    <p class="hint" style="margin:0">Escolha quem vai receber a oferta. A primeira pessoa que responder "SIM" fica com o horário.</p>
+    <div class="list">
+      ${wait.map(([id,n,d,p])=>`<button class="item ${st.enc.has(id)?'sel':''}" data-act="enc" data-id="${id}" style="border:0;background:${st.enc.has(id)?'':'none'};text-align:left;padding:12px 10px;margin-bottom:4px"><span class="check">${st.enc.has(id)?I.check:''}</span><div class="grow"><b>${n}</b><div class="small muted">${d} · ${p}</div></div></button>`).join('')}
+    </div>
+    <div class="card soft">
+      <div class="label" style="margin-bottom:6px">Mensagem que a IA vai enviar</div>
+      <div class="hint" style="color:var(--ink);font-size:13px">Oi, Mariana! Aqui é da Clínica Sorriso Vivo 😊 Abriu um horário <b>hoje às 15h</b> com a Dra. Camila. Quer ficar com ele? Responda SIM para confirmar.</div>
+    </div>
+    <button class="btn" data-act="encsend" style="margin-top:auto">Enviar oferta pelo WhatsApp (${st.enc.size})</button>`}
+  </div>`};
+
+const conv=[['AS','Ana Souza','IA: Sem problema, Ana! Quer remarcar para quinta?','09:12','p-brand','IA atendendo'],['GM','Gustavo Melo','Quanto custa o clareamento?','09:05','p-brand','IA atendendo','chat'],['FR','Fernanda Reis','Preciso falar sobre o meu convênio','08:51','p-bad','Precisa de você'],['RC','Rafael Costa','IA: Confirmado! Até amanhã às 10h30.','08:40','p-gray','Resolvida'],['DS','Dona Sônia','Estou com muita dor no dente','08:22','p-bad','Precisa de você']];
+S.conversas = {name:'Conversas no WhatsApp', html:()=>`
+  ${hdr('Conversas','A IA respondeu 31 mensagens hoje')}
+  <div class="body">
+    <div class="tabs"><button class="tab on">Todas</button><button class="tab">Precisa de você · 2</button><button class="tab">IA atendendo</button></div>
+    <div class="list">
+      ${conv.map(([a,n,m,t,c,l])=>`<a class="item" href="#chat"><span class="av">${a}</span><div class="grow"><div class="row" style="gap:6px"><b class="grow">${n}</b><span class="small muted">${t}</span></div><div class="small muted" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m}</div><span class="pill ${c}" style="margin-top:5px">${l}</span></div></a>`).join('')}
+    </div>
+  </div>${nav('conversas')}`};
+
+S.chat = {name:'Conversa com a IA', html:()=>`
+  <header class="top" style="border-bottom:1px solid var(--line);padding-bottom:10px"><a class="back" href="#conversas" aria-label="Voltar">${I.back}</a><span class="av">GM</span><div class="grow"><b>Gustavo Melo</b><div class="small muted">${st.human?'Você está atendendo':'Agente de IA atendendo'}</div></div><button class="btn sm ${st.human?'ghost':''}" data-act="human">${st.human?'Devolver à IA':'Assumir'}</button></header>
+  <div class="chat">
+    <span class="sys">Hoje</span>
+    <div class="msg">Boa tarde! Quanto custa o clareamento?<small>09:05</small></div>
+    <div class="msg out"><span class="who">${I.bot} Assistente da Sorriso Vivo</span>Oi, Gustavo! O clareamento na clínica começa em R$ 890. O valor certo depende de uma avaliação rápida com a Dra. Camila, que é gratuita. Quer agendar?<small>09:05 ✓✓</small></div>
+    <div class="msg">Quero sim. Pode ser semana que vem de manhã?<small>09:06</small></div>
+    <div class="msg out"><span class="who">${I.bot} Assistente da Sorriso Vivo</span>Tenho estes horários livres:<div class="slots"><span>Seg 30/11 · 09h</span><span>Ter 01/12 · 10h30</span><span>Qua 02/12 · 08h</span></div><small>09:06 ✓✓</small></div>
+    <div class="msg">Terça 10h30<small>09:07</small></div>
+    <div class="msg out"><span class="who">${I.bot} Assistente da Sorriso Vivo</span>Pronto! Avaliação marcada para <b>terça, 01/12, às 10h30</b>. Vou te lembrar um dia antes. Endereço: Av. Norte-Sul, 1200, Campinas.<small>09:07 ✓✓</small></div>
+    <span class="sys">${I.check} Consulta criada na agenda · Cadeira 1</span>
+    ${st.human?'<span class="sys">Você assumiu a conversa. A IA está pausada para este paciente.</span>':''}
+  </div>
+  <div class="composer"><input id="msgin" aria-label="Mensagem" placeholder="${st.human?'Escreva uma mensagem':'Assuma a conversa para responder'}" ${st.human?'':'disabled'}><button class="btn sm" aria-label="Enviar" ${st.human?'':'disabled'}>${I.send}</button></div>`};
+
+const orc=[['Paulo Henrique','Implante unitário','R$ 4.200','Enviado há 3 dias','2º contato amanhã','warn'],['Juliana Prado','Aparelho autoligado','R$ 5.800','Enviado há 8 dias','3º contato hoje','warn'],['Marcos Vieira','Coroa de porcelana','R$ 1.900','Enviado há 15 dias','Pediu para parcelar','bad'],['Sílvia Torres','Clareamento','R$ 890','Aprovado ontem','Agendado 02/12','ok']];
+S.orcamentos = {name:'Orçamentos', html:()=>`
+  ${hdr('Orçamentos','Novembro')}
+  <div class="body">
+    <div class="funnel">
+      <div><div class="label">Enviados</div><div class="big">23</div></div>
+      <div><div class="label">Contato</div><div class="big">9</div></div>
+      <div><div class="label">Aprovados</div><div class="big" style="color:var(--ok)">14</div></div>
+    </div>
+    <div class="card soft"><div class="row"><div class="grow"><div class="label">Taxa de aprovação</div><div class="big">61%</div></div><span class="pill p-ok">+22 p.p. com follow-up</span></div></div>
+    <div class="list">
+      ${orc.map(([n,p,v,e,s,k],i)=>`<a class="item" href="#orcamento"><div class="grow"><div class="row" style="gap:6px"><b class="grow">${n}</b><b style="font-variant-numeric:tabular-nums">${v}</b></div><div class="small muted">${p} · ${e}</div><span class="pill p-${k}" style="margin-top:5px">${s}</span></div><span class="chev">${I.chev}</span></a>`).join('')}
+    </div>
+  </div>${nav('orcamentos')}`};
+
+S.orcamento = {name:'Follow-up do orçamento', html:()=>`
+  ${hdr('Paulo Henrique','Implante unitário · R$ 4.200','orcamentos')}
+  <div class="body">
+    <div class="card soft"><div class="row"><div class="grow"><div class="label">Status</div><b>Aguardando resposta</b></div><span class="pill p-warn">3 dias</span></div></div>
+    <div><div class="label" style="margin-bottom:12px">Sequência automática da IA</div>
+      <div class="tl">
+        <div class="done"><b>21/11 · Orçamento enviado</b><div class="small muted">PDF do plano de tratamento pelo WhatsApp</div></div>
+        <div class="${st.orcSent?'done':'next'}"><b>${st.orcSent?'24/11 · Lembrete enviado agora':'25/11 · Tirar dúvidas'}</b><div class="small muted">"Paulo, ficou alguma dúvida sobre o implante? Posso explicar as formas de pagamento."</div></div>
+        <div><b>28/11 · Opção de parcelamento</b><div class="small muted">Mostra parcelas em até 12x</div></div>
+        <div><b>05/12 · Último contato</b><div class="small muted">Se não houver resposta, avisa a recepção</div></div>
+      </div>
+    </div>
+    <div style="margin-top:auto;display:grid;gap:10px">
+      <button class="btn" data-act="orc">${st.orcSent?'Lembrete enviado ✓':'Enviar o próximo contato agora'}</button>
+      <a class="btn ghost" href="#chat">Abrir conversa</a>
+    </div>
+  </div>`};
+
+S.mais = {name:'Mais opções', html:()=>`
+  ${hdr('Mais','Clínica Sorriso Vivo')}
+  <div class="body">
+    <div class="list card" style="padding:4px 16px">
+      ${[['reativacao','Reativar pacientes','86 pacientes sem consulta há mais de 6 meses'],['agente','Agente de IA','Tom de voz, horários e transferência'],['planos','Plano e cobrança','Plano Clínica · teste grátis, 9 dias restantes'],['login','Sair','dra.camila@sorrisovivo.com.br']].map(([h,t,d])=>`<a class="item" href="#${h}"><div class="grow"><b>${t}</b><div class="small muted">${d}</div></div><span class="chev">${I.chev}</span></a>`).join('')}
+    </div>
+  </div>${nav('mais')}`};
+
+S.reativacao = {name:'Reativação de pacientes', html:()=>`
+  ${hdr('Reativar pacientes','Quem não volta há mais de 6 meses','mais')}
+  <div class="body">
+    ${st.react?`
+      <div class="card" style="background:var(--ok-soft);border-color:transparent"><span class="pill p-ok">${I.check} Campanha enviada</span><div style="margin-top:10px;font-weight:700">86 mensagens na fila de envio</div><div class="small muted" style="margin-top:4px">Para não parecer spam, a IA envia 20 por hora, só em horário comercial. As respostas caem em Conversas.</div></div>
+      <div class="kpis"><div class="kpi"><div class="label">Responderam</div><div class="big">—</div><div class="small muted">atualiza em tempo real</div></div><div class="kpi"><div class="label">Meta</div><div class="big">10%</div><div class="small muted">≈ 9 retornos</div></div></div>
+      <a class="btn" href="#conversas" style="margin-top:auto">Acompanhar respostas</a>`:`
+    <div class="kpis">
+      <div class="kpi"><div class="label">Pacientes</div><div class="big">86</div><div class="small muted">última consulta antes de maio</div></div>
+      <div class="kpi"><div class="label">Potencial</div><div class="big">R$ 18,9 mil</div><div class="small muted">se 10% voltarem</div></div>
+    </div>
+    <div class="field"><label for="mot">Motivo do contato</label><select id="mot"><option>Revisão e limpeza semestral</option><option>Manutenção ortodôntica atrasada</option><option>Tratamento interrompido</option></select></div>
+    <div class="field"><label for="txt">Mensagem (a IA personaliza com o nome)</label><textarea id="txt" rows="4">Oi, {nome}! Já faz um tempinho desde a sua última limpeza aqui na Sorriso Vivo. Que tal marcar a revisão? Tenho horários nesta semana.</textarea></div>
+    <p class="hint" style="margin:0">Só recebem a mensagem os pacientes que autorizaram contato pelo WhatsApp (LGPD).</p>
+    <button class="btn" data-act="react" style="margin-top:auto">Enviar para 86 pacientes</button>`}
+  </div>`};
+
+S.agente = {name:'Agente de IA', html:()=>{
+  const t=st.toggles;
+  const tg=(k,l,d)=>`<div class="item"><div class="grow"><b>${l}</b><div class="small muted">${d}</div></div><button class="toggle" aria-label="${l}" aria-pressed="${t[k]}" data-act="tg" data-k="${k}"></button></div>`;
+  return `${hdr('Agente de IA','O que ele faz por você','mais')}
+  <div class="body">
+    <div class="card soft row"><span class="av" style="background:var(--brand);color:#fff">${I.bot}</span><div class="grow"><b>Assistente da Sorriso Vivo</b><div class="small muted">Tom: acolhedor e direto · Português</div></div><span class="pill ${t.ia?'p-ok':'p-gray'}">${t.ia?'Ativo':'Pausado'}</span></div>
+    <div class="card" style="padding:4px 16px"><div class="list">
+      ${tg('ia','Responder pacientes no WhatsApp','Dúvidas, preços de referência e agendamento')}
+      ${tg('conf','Confirmar consultas','48 h e 3 h antes')}
+      ${tg('orc','Follow-up de orçamentos','Sequência de 4 contatos em 15 dias')}
+      ${tg('noite','Atender à noite e fim de semana','24 horas por dia')}
+      ${tg('human','Chamar a recepção quando precisar','Dor, urgência, convênio ou paciente irritado')}
+    </div></div>
+    <p class="hint">A IA nunca dá diagnóstico nem promete resultado de tratamento, como pede o Código de Ética Odontológica.</p>
+    <a class="btn" href="#painel" style="margin-top:auto">Salvar e ir para o painel</a>
+  </div>`}};
+
+S.planos = {name:'Planos', html:()=>`
+  ${hdr('Planos','Cancele quando quiser','mais')}
+  <div class="body">
+    <div class="plan"><div class="row"><b class="grow">Grátis</b><span class="price">R$ 0</span></div><ul><li>Agenda online para 1 dentista</li><li>Cadastro de pacientes</li><li>Lembretes manuais</li></ul></div>
+    <div class="plan"><div class="row"><b class="grow">Essencial</b><span class="price">R$ 149<small>/mês</small></span></div><ul><li>Confirmação automática no WhatsApp</li><li>Lista de espera e encaixes</li><li>Relatório de faltas</li></ul></div>
+    <div class="plan best"><div class="row"><b class="grow">Clínica</b><span class="pill p-brand">Seu teste grátis</span></div><div class="price">R$ 349<small>/mês · até 5 dentistas</small></div><ul><li>Agente de IA 24 h no WhatsApp</li><li>Follow-up automático de orçamentos</li><li>Reativação de pacientes</li><li>Painel de faturamento previsto</li></ul><a class="btn" href="#painel">Assinar o plano Clínica</a></div>
+    <p class="hint" style="text-align:center">No plano anual você ganha 2 meses.</p>
+  </div>`};
+
+const order=['login','onboarding','agente','painel','encaixe','agenda','conversas','chat','orcamentos','orcamento','reativacao','planos','mais'];
+const screen=document.getElementById('screen');
+let toast='';
+function render(){
+  let h=(location.hash||'').slice(1);
+  if(!S[h]) h='login';
+  screen.innerHTML=S[h].html()+(toast?`<div class="toast">${I.check}${toast}</div>`:'');
+  document.querySelector('.phone').querySelector('.toast')?.remove();
+  document.getElementById('map').innerHTML=order.map((k,i)=>`<li><a href="#${k}" class="${k===h?'on':''}"><span>${i+1}</span>${S[k].name}</a></li>`).join('');
+  document.title='SorriaGestão · '+S[h].name;
+}
+function flash(t){toast=t;render();clearTimeout(flash.t);flash.t=setTimeout(()=>{toast='';const el=screen.querySelector('.toast');if(el)el.remove();},2600);}
+let lastHash=location.hash;
+window.addEventListener('hashchange',()=>{toast='';screen.scrollTop=0;render();});
+screen.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]'); if(!b) return;
+  const a=b.dataset.act;
+  if(a==='onb'){st.onb++;render();}
+  if(a==='enc'){const id=b.dataset.id;st.enc.has(id)?st.enc.delete(id):st.enc.add(id);render();}
+  if(a==='encsend'){if(!st.enc.size)return;st.encSent=true;flash('Oferta enviada. Mariana respondeu SIM.');}
+  if(a==='human'){st.human=!st.human;render();}
+  if(a==='react'){st.react=true;flash('Campanha agendada para 86 pacientes');}
+  if(a==='orc'){if(!st.orcSent){st.orcSent=true;flash('Lembrete enviado ao Paulo pelo WhatsApp');}}
+  if(a==='tg'){const k=b.dataset.k;st.toggles[k]=!st.toggles[k];render();}
+});
+render();
+</script>
